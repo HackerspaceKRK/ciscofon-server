@@ -47,13 +47,11 @@ func (s *CiscoFonServer) readHandler(filename string, rf io.ReaderFrom) error {
 	filepath := filepath.Join(s.config.String("tftp.dir"), cleanedFilename)
 	file, err := os.Open(filepath)
 	if err != nil {
-		log.Printf("`TFTP` GET %s: %v", filename, err)
 		return err
 	}
 	defer file.Close()
 	_, err = rf.ReadFrom(file)
 	if err != nil {
-		log.Printf("TFTP GET %s: %v", filename, err)
 		return err
 	}
 
@@ -158,7 +156,7 @@ func (s *CiscoFonServer) logRequest(service, method, path string, status string,
 		Status:  status,
 		IP:      ip,
 	}
-	log.Printf("[%s] %s %s %s %d", service, ip, method, path, status)
+	log.Printf("[%s] %s %s %s %s", service, ip, method, path, status)
 	connectionsMu.Lock()
 	defer connectionsMu.Unlock()
 	for conn := range connections {
