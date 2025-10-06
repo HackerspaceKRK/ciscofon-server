@@ -47,8 +47,8 @@ func (s *CiscoFonServer) readHandler(filename string, rf io.ReaderFrom) error {
 	filepath := filepath.Join(s.config.String("tftp.dir"), cleanedFilename)
 	file, err := os.Open(filepath)
 	if err != nil {
-		log.Printf("TFTP GET %s: %v", filename, err)
-		return nil
+		log.Printf("`TFTP` GET %s: %v", filename, err)
+		return err
 	}
 	defer file.Close()
 	_, err = rf.ReadFrom(file)
