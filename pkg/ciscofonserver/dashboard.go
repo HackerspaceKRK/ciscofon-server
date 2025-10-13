@@ -16,6 +16,9 @@ var templatesFS embed.FS
 var connections = make(map[*websocket.Conn]bool)
 var connectionsMu sync.Mutex
 
+var logBuffer = make([]logEntry, 0, 100)
+var logBufferMu sync.Mutex
+
 type logEntry struct {
 	Time    time.Time `json:"time"`
 	Service string    `json:"service"`
@@ -47,6 +50,12 @@ func (s *CiscoFonServer) registerDashboardRoutes(app *fiber.App) {
 			}
 		}
 	}))
+
+	app.Get("/dashboard/api/logs-buffer", func(c *fiber.Ctx) error {
+		logBufferMu.Lock()
+		defer logBufferMu.Unlock()
+		return c.JSON(logBuffer)
+	})
 }
 
 func (s *CiscoFonServer) logRequest(service, method, path string, status string, ip string) {
@@ -59,6 +68,14 @@ func (s *CiscoFonServer) logRequest(service, method, path string, status string,
 		IP:      ip,
 	}
 	log.Printf("[%s] %s %s %s %s", service, ip, method, path, status)
+
+	logBufferMu.Lock()
+	if len(logBuffer) >= 100 {
+		logBuffer = logBuffer[1:]
+	}
+	logBuffer = append(logBuffer, entry)
+	logBufferMu.Unlock()
+
 	connectionsMu.Lock()
 	defer connectionsMu.Unlock()
 	for conn := range connections {

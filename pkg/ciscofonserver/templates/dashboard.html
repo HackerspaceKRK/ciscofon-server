@@ -23,12 +23,23 @@
 
 <script>
   const log = document.getElementById('log');
-  const ws = new WebSocket(`ws://${window.location.host}/dashboard/log-ws`);
-  ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
+
+  function addLogEntry(data) {
     const entry = document.createElement('div');
     entry.textContent = `[${data.time}] [${data.service}] ${data.ip} ${data.method} ${data.path} ${data.status}`;
     log.appendChild(entry);
+  }
+
+  fetch('/dashboard/api/logs-buffer')
+    .then(response => response.json())
+    .then(data => {
+      data.forEach(addLogEntry);
+    });
+
+  const ws = new WebSocket(`ws://${window.location.host}/dashboard/log-ws`);
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    addLogEntry(data);
   };
 </script>
 </body>
